@@ -1,16 +1,21 @@
-import express, { Request, Response } from "express"
+import express, { Request, response, Response } from "express"
 import { Pool } from 'pg'
+import dotenv from 'dotenv'
+import path from "path";
 const app = express()
 const port = 5000;
+// parser 
+app.use(express.json())
+
+
+
+dotenv.config({ path: path.join(process.cwd(), ".env") })
 
 const pool = new Pool({
-  connectionString: `postgresql://neondb_owner:npg_MyDK14njPZFW@ep-muddy-cell-ad307w5r-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require`
+  connectionString: `${process.env.CONNECTION_STR}`
 })
 
 
-
-// parser 
-app.use(express.json())
 
 
 
@@ -46,13 +51,142 @@ initDB()
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello Next Level Developers!')
 })
-app.post("/", (req, res) => {
-  console.log("req", req.body)
 
-  res.status(201).json({
-    success: true,
-    message: "API is working"
-  })
+// users CRUD
+
+// post 
+app.post("/users", async (req: Request, res: Response) => {
+  const { name, email } = req.body;
+  console.log("req", name, email)
+  // return
+  try {
+    const result = await pool.query(`
+  INSERT INTO users(name, email) VALUES($1, $2) RETURNING *
+  `, [name, email])
+    console.log(result);
+    res.status(200).json({
+      success: true,
+      message: "Data inserted successfully",
+      data: result.rows[0]
+    })
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+})
+// get all data
+app.get("/users", async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(`
+      SELECT * FROM users
+      `)
+    console.log("all users", result)
+    res.status(200).json({
+      success: true,
+      message: "Users retrive successfully",
+      data: result.rows
+    })
+
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+})
+// get single data
+app.get("/users/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params
+    const result = await pool.query(`
+  SELECT * FROM users WHERE id=$1
+  `, [id])
+    console.log(result)
+    if (result.rows.length < 1) {
+      return res.status(404).json({
+        success: false,
+        message: "Data not found"
+      })
+    }
+    else {
+      res.status(200).json({
+        success: true,
+        message: "Single data get Successfully",
+        data: result.rows[0]
+      })
+    }
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+
+})
+
+// update data 
+app.put("/users/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params
+    const { name, email } = req.body;
+    console.log("update data", name, id)
+    // return
+    const result = await pool.query(`
+      UPDATE users SET name=$1, email=$2 WHERE id=$3 RETURNING *
+      `, [name, email, id])
+
+    console.log("update data", result)
+    if (result.rows.length < 1) {
+      return res.status(404).json({
+        success: false,
+        message: "Data not found"
+      })
+    }
+    else {
+      res.status(200).json({
+        success: true,
+        message: "Users Updated Successfully",
+        data: result.rows[0]
+      })
+    }
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+})
+
+// delete data 
+app.delete("/users/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params
+    const result = await pool.query(`
+  DELETE FROM users WHERE id=$1
+  `, [id])
+    console.log(result)
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Data not found"
+      })
+    }
+    else {
+      res.status(200).json({
+        success: true,
+        message: "User delete Successfully",
+        data: null
+      })
+    }
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+
 })
 
 app.listen(port, () => {
