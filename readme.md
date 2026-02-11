@@ -15,3 +15,6 @@ npx tsx example.ts
 
 I have to use to get 'post" data by a middleware. Name
 -app.use(express.json()) 
+
+if i want to get form data use
+app.use(express.urlencoded());
