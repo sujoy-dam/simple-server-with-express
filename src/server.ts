@@ -1,18 +1,15 @@
 import express, { Request, response, Response } from "express"
 import { Pool } from 'pg'
-import dotenv from 'dotenv'
-import path from "path";
+import config from "./config";
+
 const app = express()
-const port = 5000;
+const port = config.port;
 // parser 
 app.use(express.json())
 
 
-
-dotenv.config({ path: path.join(process.cwd(), ".env") })
-
 const pool = new Pool({
-  connectionString: `${process.env.CONNECTION_STR}`
+  connectionString: `${config.connection_str}`
 })
 
 
@@ -137,7 +134,7 @@ app.put("/users/:id", async (req: Request, res: Response) => {
       UPDATE users SET name=$1, email=$2 WHERE id=$3 RETURNING *
       `, [name, email, id])
 
-    console.log("update data", result)
+    // console.log("update data", result)
     if (result.rows.length < 1) {
       return res.status(404).json({
         success: false,
@@ -230,6 +227,102 @@ app.get("/todos", async (req: Request, res: Response) => {
     })
   }
 })
+
+// get single data
+app.get("/todos/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params
+    const result = await pool.query(`
+  SELECT * FROM todos WHERE id=$1
+  `, [id])
+    // console.log(result)
+    if (result.rows.length < 1) {
+      return res.status(404).json({
+        success: false,
+        message: "Data not found"
+      })
+    }
+    else {
+      res.status(200).json({
+        success: true,
+        message: "Single data get Successfully",
+        data: result.rows[0]
+      })
+    }
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+
+})
+
+// update data 
+app.put("/todos/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params
+    const { title } = req.body;
+    // console.log("update data", name, id)
+    // return
+    const result = await pool.query(`
+      UPDATE todos SET title=$1 WHERE id=$3 RETURNING *
+      `, [title])
+
+    // console.log("update data", result)
+    if (result.rows.length < 1) {
+      return res.status(404).json({
+        success: false,
+        message: "Data not found"
+      })
+    }
+    else {
+      res.status(200).json({
+        success: true,
+        message: "todos Updated Successfully",
+        data: result.rows[0]
+      })
+    }
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+})
+
+// delete data 
+app.delete("/todos/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params
+    const result = await pool.query(`
+  DELETE FROM todos WHERE id=$1
+  `, [id])
+    // console.log(result)
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Data not found"
+      })
+    }
+    else {
+      res.status(200).json({
+        success: true,
+        message: "Todos delete Successfully",
+        data: result.rows
+      })
+    }
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+
+})
+
+
+
 
 // not found route 
 app.use((req,res, next)=>{
