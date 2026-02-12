@@ -57,13 +57,13 @@ app.get('/', (req: Request, res: Response) => {
 // post 
 app.post("/users", async (req: Request, res: Response) => {
   const { name, email } = req.body;
-  console.log("req", name, email)
+  // console.log("req", name, email)
   // return
   try {
     const result = await pool.query(`
   INSERT INTO users(name, email) VALUES($1, $2) RETURNING *
   `, [name, email])
-    console.log(result);
+    // console.log(result);
     res.status(200).json({
       success: true,
       message: "Data inserted successfully",
@@ -82,7 +82,7 @@ app.get("/users", async (req: Request, res: Response) => {
     const result = await pool.query(`
       SELECT * FROM users
       `)
-    console.log("all users", result)
+    // console.log("all users", result)
     res.status(200).json({
       success: true,
       message: "Users retrive successfully",
@@ -103,7 +103,7 @@ app.get("/users/:id", async (req: Request, res: Response) => {
     const result = await pool.query(`
   SELECT * FROM users WHERE id=$1
   `, [id])
-    console.log(result)
+    // console.log(result)
     if (result.rows.length < 1) {
       return res.status(404).json({
         success: false,
@@ -131,7 +131,7 @@ app.put("/users/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     const { name, email } = req.body;
-    console.log("update data", name, id)
+    // console.log("update data", name, id)
     // return
     const result = await pool.query(`
       UPDATE users SET name=$1, email=$2 WHERE id=$3 RETURNING *
@@ -166,7 +166,7 @@ app.delete("/users/:id", async (req: Request, res: Response) => {
     const result = await pool.query(`
   DELETE FROM users WHERE id=$1
   `, [id])
-    console.log(result)
+    // console.log(result)
     if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
@@ -188,6 +188,58 @@ app.delete("/users/:id", async (req: Request, res: Response) => {
   }
 
 })
+
+
+// todos crud 
+app.post("/todos", async (req, res) => {
+  console.log(req.body)
+  const { user_id, title } = req.body;
+  try {
+const result = await pool.query(`
+  INSERT INTO todos(user_id, title) VALUES($1, $2) RETURNING *
+  `,[user_id, title])
+  res.status(200).json({
+    success:true,
+    message:"Todos create Successfully", 
+    data:result.rows[0]
+  })
+  } catch (error: any) {
+    res.status(500).json({
+      successs: false,
+      message: error.message
+    })
+  }
+})
+
+app.get("/todos", async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(`
+      SELECT * FROM todos
+      `)
+    // console.log("all users", result)
+    res.status(200).json({
+      success: true,
+      message: "Todos retrive successfully",
+      data: result.rows
+    })
+
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+})
+
+// not found route 
+app.use((req,res, next)=>{
+  res.status(404).json({
+    success:false,
+    message:"Route not found",
+    path:req.path,
+  })
+})
+
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
