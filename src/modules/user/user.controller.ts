@@ -2,12 +2,13 @@ import { Request, Response } from "express";
 import { userService } from "./user.service";
 
 const createUser = async (req: Request, res: Response) => {
-  const { name, email } = req.body;
+  const { name, email, password } = req.body;
   // console.log("req", name, email)
   // return
   try {
-    const result = await userService.createUserDB(name, email)
+    const result = await userService.createUserDB(name, email, password)
     // console.log(result);
+    // return
     res.status(200).json({
       success: true,
       message: "Data inserted successfully",
