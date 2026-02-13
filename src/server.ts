@@ -2,7 +2,8 @@ import express, { Request, response, Response } from "express"
 import config from "./config";
 import initDB, { pool } from "./config/db";
 import {userRoutes } from "./modules/user/user.routes";
-import { authRoutes } from "./modules/auth/auth.service";
+import { authRoutes } from "./modules/auth/auth.routes";
+// import { authRoutes } from "./modules/auth/auth.routes";
 
 const app = express()
 const port = config.port;
