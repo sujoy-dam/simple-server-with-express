@@ -4,12 +4,12 @@ import jwt from 'jsonwebtoken';
 import config from "../../config";
 
 const loginUserDB = async (email: string, password: string) => {
-    // console.log("connected login Db", email, password)
     const result = await pool.query(`
         SELECT * FROM users WHERE email=$1
         `, [email])
-
-    if (result.rows.length < 0) {
+        
+        console.log("connected login Db", result)
+    if (result.rows.length === 0) {
         return null;
     }
     const user = result.rows[0]
