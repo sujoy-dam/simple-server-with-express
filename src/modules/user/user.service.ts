@@ -1,7 +1,7 @@
 import { pool } from "../../config/db";
 import bcrypt from "bcryptjs";
 
-const createUserDB = async (name: string, email: string, password:string) => {
+const createUserDB = async (name: string, email: string, role:string, password:string) => {
 
 // hasssing password 
 const hashPass = await bcrypt.hash(password, 10);
@@ -9,8 +9,8 @@ const hashPass = await bcrypt.hash(password, 10);
 // return
 
   const result = await pool.query(`
-  INSERT INTO users(name, email, password) VALUES($1, $2, $3) RETURNING *
-  `, [name, email, hashPass])
+  INSERT INTO users(name, email, role, password) VALUES($1, $2, $3, $4) RETURNING *
+  `, [name, email, role, hashPass])
   return result;
 }
 

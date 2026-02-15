@@ -20,7 +20,8 @@ const loginUserDB = async (email: string, password: string) => {
     // console.log(result)
     const userInfo = {
         name:user.name,
-        email:user.email
+        email:user.email,
+        role: user.role
     }
     const token = jwt.sign(userInfo, config.jwt_secret as string,{expiresIn:"7d"} )
     console.log(token)
